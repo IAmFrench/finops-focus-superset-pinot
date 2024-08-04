@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+title: FinOps FOCUS Dashboards and Charts with Apache Superset and Apache Pinot
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - orcid: "https://orcid.org/0009-0002-1956-1126"
+    given-names: Alexandre
+    family-names: PARÈS
+repository-code: >-
+  https://github.com/IAmFrench/finops-focus-superset-pinot
+abstract: >-
+  FinOps FOCUS Dashboards and Charts with Apache Superset and Apache Pinot.
+keywords:
+  - FinOps
+  - FOCUS
+  - focus-v1.0
+  - apache-superset
+  - apache-pinot
+  - aws-billing
+  - google-billing
+  - azure-billing
+license: Apache-2.0
