@@ -30,6 +30,12 @@ Learn more about Apache Pinot in [the Apache Pinot Docs](https://docs.pinot.apac
 
 > todo
 
+![Apache Pinot Schema for FOCUS v1.0-preview AWS export](./assets/apache_pinot_focus_aws_schema.png)
+> Apache Pinot Schema for FOCUS v1.0-preview AWS export
+
+![Apache Pinot Offline table for FOCUS v1.0-preview AWS export](./assets/apache_pinot_focus_aws_table.png)
+> Apache Pinot Offline table for FOCUS v1.0-preview AWS export
+
 ## Installation Guide
 
 > todo
