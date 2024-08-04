@@ -60,7 +60,7 @@ Total Objects: 8
 Total Size: 311.3 MiB
 ```
 
-We can copy all `.parquet` files into a `/exports` folder locally:
+We can copy all `.parquet` files into a local `/exports` folder:
 
 ```bash
 # Name of the export
