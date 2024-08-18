@@ -28,69 +28,100 @@ Learn more about Apache Pinot in [the Apache Pinot Docs](https://docs.pinot.apac
 
 ## Architecture diagram
 
-> todo
-
-![Apache Pinot Schema for FOCUS v1.0-preview AWS export](./assets/apache_pinot_focus_aws_schema.png)
-> Apache Pinot Schema for FOCUS v1.0-preview AWS export
-
-![Apache Pinot Offline table for FOCUS v1.0-preview AWS export](./assets/apache_pinot_focus_aws_table.png)
-> Apache Pinot Offline table for FOCUS v1.0-preview AWS export
+```mermaid
+flowchart LR
+    AWS --> Ingestion
+    Azure --> Ingestion
+    OCI --> Ingestion
+    Ingestion --> id1[Apache Pinot]
+    id1[Apache Pinot] --> id2[Apache Superset]
+```
 
 ## Installation Guide
 
+### 1. Download FOCUS exports
+
+For each of your Cloud Service Provider, you will need to configure a FOCUS export (not covered by this tutorial).
+Once the export is setup and running you can download focus exports files.
+We recommend to sync periodically your downloaded files with up to date focus exports.
+
+For each of your Cloud Service Provider, you will need to configure a FOCUS export (not covered by this tutorial).
+Once the export is setup and running you can download focus exports files.
+We recommend to sync periodically your downloaded files with up to date focus exports.
+
+You can use the following script [`./scripts/download_focus_export.sh`](./scripts/download_focus_export.sh) to download your exports.
+
+Examples:
+- AWS
+```bash
+# Download AWS FOCUS exports files
+./scripts/download_focus_export.sh \
+    -p aws \
+    -b bucket_name \
+    -e export_name \
+    -d export/directory \
+    -o ./exports/aws/
+```
+- Azure
+```bash
+# Download Azure FOCUS exports files
+./scripts/download_focus_export.sh \
+    -p azure \
+    -b storage_account_name \
+    -c container_name \
+    -e export_name \
+    -d export/directory \
+    -o ./exports/azure/
+```
+- OCI
+```bash
+# Download OCI FOCUS exports files
+./scripts/download_focus_export.sh \
+    -p oci \
+    -b bucket_name \
+    -o ./exports/oci/
+```
+
 > todo
+- [ ] Publish download_focus_export.sh script
 
-### 1. Download FOCUS exports from AWS bucket
+### 2. Import FOCUS exports to Apache Pinot
 
-Let's assume you have created a FOCUS export to the `finops-exports-1a2b3c4d` s3 bucket using the [`billing-export`](https://registry.terraform.io/modules/IAmFrench/billing-export/aws/latest) Terraform module for AWS.
+Once FOCUS exports are downloaded and stored in the `./exports` directory we can import them to Apache Pinot.
 
-This bucket has the folling structure:
-```bash
-# Set the Name of the bucket where AWS FOCUS v1.0-preview exports are
-export AWS_FOCUS_EXPORT_BUCKET="finops-exports-1a2b3c4d"
-export AWS_EXPORT_S3_PREFIX="focus/123456789"
+But first we need to initialize our Apache Pinot with FOCUS Schema and Table config for each Cloud Service Provider.
 
-# List all objects in the s3 bucket
-aws s3 ls s3://${AWS_FOCUS_EXPORT_BUCKET}/${AWS_EXPORT_S3_PREFIX}/ --recursive --summarize --human-readable
-
-2024-07-06 05:00:09   56.2 MiB focus-1-0-preview-export/data/BILLING_PERIOD=2024-06/focus-1-0-preview-export-00001.snappy.parquet
-2024-07-06 05:00:09   56.1 MiB focus-1-0-preview-export/data/BILLING_PERIOD=2024-06/focus-1-0-preview-export-00002.snappy.parquet
-2024-07-06 05:00:09   56.0 MiB focus-1-0-preview-export/data/BILLING_PERIOD=2024-06/focus-1-0-preview-export-00003.snappy.parquet
-2024-07-27 11:53:52   47.7 MiB focus-1-0-preview-export/data/BILLING_PERIOD=2024-07/focus-1-0-preview-export-00001.snappy.parquet
-2024-07-27 11:53:52   47.6 MiB focus-1-0-preview-export/data/BILLING_PERIOD=2024-07/focus-1-0-preview-export-00002.snappy.parquet
-2024-07-27 11:53:52   47.7 MiB focus-1-0-preview-export/data/BILLING_PERIOD=2024-07/focus-1-0-preview-export-00003.snappy.parquet
-2024-07-06 05:00:29    2.6 KiB focus-1-0-preview-export/metadata/BILLING_PERIOD=2024-06/focus-1-0-preview-export-Manifest.json
-2024-07-27 11:54:02    2.6 KiB focus-1-0-preview-export/metadata/BILLING_PERIOD=2024-07/focus-1-0-preview-export-Manifest.json
-
-Total Objects: 8
-Total Size: 311.3 MiB
-```
-
-We can copy all `.parquet` files into a local `/exports` folder:
+To start the Apache Pinot stack in development we use Docker Compose, config is stored in [`compose.yaml`](./compose.yaml) file.
 
 ```bash
-# Name of the export
-export AWS_EXPORT_NAME="focus-1-0-preview-export"
+# We start all services (Apache Pinot + Apache Superset)
+docker compose up -d
 
-# Clone the folder data that contains .parquet files to a local exports folder
-aws s3 cp s3://${AWS_FOCUS_EXPORT_BUCKET}/${AWS_EXPORT_S3_PREFIX}/${AWS_EXPORT_NAME}/data/ ./exports --recursive
+# To stop you can use this command
+docker compose down
 ```
 
-We should have this structure in our local `./exports` folder:
+Once the stack is running, we can run the [`init-pinot.sh`](./init-pinot.sh) script to config and populate our Pinot Cluster with FOCUS Schemas and FOCUS Tables for each Cloud Service Provider.
+
+This script will also import FOCUS exports to Apache Pinot.
+
+> todo:
+
+- [ ] Publish schemas for AWS, Azure, OCI and the blended table
+- [ ] Publish table configs for AWS, Azure, OCI and the blended table
+- [ ] Publish compose.yaml file
+- [ ] Publish init-pinot.sh script
+- [ ] Publish Spark ingestion jobs for AWS, Azure and OCI
+
+### 3. Launch and configure Apache Superset
+
+Add the Apache Pinot database to Apache Superset:
 
 ```bash
-du -a ./exports
-
-57588   ./exports/BILLING_PERIOD=2024-06/focus-1-0-preview-export-00001.snappy.parquet
-57412   ./exports/BILLING_PERIOD=2024-06/focus-1-0-preview-export-00002.snappy.parquet
-57316   ./exports/BILLING_PERIOD=2024-06/focus-1-0-preview-export-00003.snappy.parquet
-172316  ./exports/BILLING_PERIOD=2024-06
-47356   ./exports/BILLING_PERIOD=2024-07/focus-1-0-preview-export-00001.snappy.parquet
-47372   ./exports/BILLING_PERIOD=2024-07/focus-1-0-preview-export-00002.snappy.parquet
-47524   ./exports/BILLING_PERIOD=2024-07/focus-1-0-preview-export-00003.snappy.parquet
-142252  ./exports/BILLING_PERIOD=2024-07
-314568  ./exports/
+pip install pinotdb
 ```
+
+> todo
 
 
 # Disclaimer
@@ -98,3 +129,5 @@ du -a ./exports
 Apache Superset, Superset, Apache Pinot, Pinot, Apache, the Superset logo, the Apache Pinot project logo and the Apache feather logo are either registered trademarks or trademarks of The Apache Software Foundation. All other products or name brands are trademarks of their respective holders, including The Apache Software Foundation. [Apache Software Foundation](https://www.apache.org/) resources
 
 FOCUS™, is either registered trademarks or trademarks of The Joint Development Foundation. All other products or name brands are trademarks of their respective holders, including The Joint Development Foundation. [Joint Development Foundation](https://jointdevelopment.org/) resources
+
+DuckDB, the DuckDB logo are either registered trademarks or trademarks of The DuckDB Foundation. All other products or name brands are trademarks of their respective holders, including The DuckDB Foundation. [DuckDB Foundation](https://duckdb.org/) resources

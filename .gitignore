@@ -1,0 +1,7 @@
+*.parquet
+*.jar
+*.csv
+*.gz
+*.tgz
+manifest.json
+tmp/
